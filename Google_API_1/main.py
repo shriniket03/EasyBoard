@@ -18,12 +18,11 @@ app.config["DEBUG"] = True
 stops_df = pd.read_pickle('stops')
 routes_df = pd.read_pickle('routes')
 tree=pickle.load(open('pickle','rb'))
-app.config['GOOGLE_API_KEY'] = 'AIzaSyBv2C67gbDICww4maZLs0vxqkO6XdJ_PlE'
 # Retrieve GOOGLE_API_KEY from environment variable
 # Compatible with most secrets management
-#app.config["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
-#if not app.config["GOOGLE_API_KEY"]:
-    #raise ValueError("No GOOGLE_API_KEY set for Flask application")
+app.config["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
+if not app.config["GOOGLE_API_KEY"]:
+    raise ValueError("No GOOGLE_API_KEY set for Flask application")
 
 def get_nearest_bus_stop(lat, lon):
     _, nearest_ind = tree.query([[lat,lon]], k=1)
@@ -118,4 +117,3 @@ def getBusCode():
     busStopCode = pd.merge(filtered_stops, filtered_routes, on='BusStopCode')['BusStopCode'].tolist()[0]
     return busStopCode
 
-app.run()
