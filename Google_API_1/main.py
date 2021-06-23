@@ -11,6 +11,7 @@ from sklearn.neighbors import KDTree
 import numpy as np
 import itertools
 import simplejson
+from fasthaversine import haversine
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -35,15 +36,8 @@ def getDistance():
         destin = (float(request.args['destinLat']), float(request.args['destinLong']))
     else:
         return "Error: Parameters not properly provided. Please specify properly."
-    lon1, lat1, lon2, lat2 = map(radians, [origin[1], origin[0], destin[1], destin[0]])
 
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * asin(sqrt(a))
-    r = 6371  # Radius of earth in kilometers. Use 3956 for miles
-
-    return jsonify(c * r)
+    return haversine(origin, destin, unit='km')
 
 
 @app.route('/api/routing', methods=['GET'])
