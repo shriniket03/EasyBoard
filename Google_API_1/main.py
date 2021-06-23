@@ -30,19 +30,19 @@ def get_nearest_bus_stop(lat, lon):
 
 @app.route('/api/distance', methods=['GET'])
 def getDistance():
-    if 'originLat' and 'originLong' and 'destinLat' and 'destinLong' in request.args:
+    if all(x in request.args for x in ['destinLong', 'destinLat','originLong','originLat']):
         origin = (float(request.args['originLat']), float(request.args['originLong']))
         destin = (float(request.args['destinLat']), float(request.args['destinLong']))
     else:
         return "Error: Parameters not properly provided. Please specify properly."
 
-    return haversine(origin, destin, unit='km')
+    return str(haversine([origin], [destin], unit='km'))
 
 
 @app.route('/api/routing', methods=['GET'])
 def getRoute():
     try:
-        if 'originLat' and 'originLong' and 'destinLat' and 'destinLong' in request.args:
+        if all(x in request.args for x in ['destinLong', 'destinLat','originLong','originLat']):
             origin = (float(request.args['originLat']), float(request.args['originLong']))
             destin = (float(request.args['destinLat']), float(request.args['destinLong']))
         else:
