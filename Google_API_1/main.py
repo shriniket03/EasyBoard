@@ -101,11 +101,10 @@ def busStops():
     idx1 = np.where(filtered_routes['BusStopCode'] == start_bus_stop['BusStopCode'])[0][0]
     end_bus_stop = get_nearest_bus_stop(*destinBusStop)
     idx2 = np.where(filtered_routes['BusStopCode'] == end_bus_stop['BusStopCode'])[0][0]
-    lister = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2 + 1], on='BusStopCode').sort_values(by=['StopSequence'])['Description'].tolist()
-    if len(lister)>numberOfStops:
-        if lister.count(lister[0])>1:
-            lister = lister[-numberOfStops-1:]
-    output = {'instructions': lister}
+    lister = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2 + 1], on='BusStopCode').sort_values(by=['StopSequence'])['BusStopCode'].tolist()
+    lister2 = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2 + 1], on='BusStopCode').sort_values(by=['StopSequence'])[
+        'Description'].tolist()
+    output = {'busStopCodes': lister,'busStopNames':lister2}
     return simplejson.dumps(output)
 
 
