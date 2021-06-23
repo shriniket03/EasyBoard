@@ -50,11 +50,20 @@ def getRoute():
     except ValueError:
         return "Error: Proper parameters not provided"
 
-    string = "https://maps.googleapis.com/maps/api/directions/json?origin=" + str(origin[0]) + "," + str(
-        origin[1]) + "&destination=" + str(destin[0]) + "," + str(destin[
-                                                                      1]) + "&key=" + app.config['GOOGLE_API_KEY'] + "&avoid=indoor&units=km&transit_mode=bus&transit_routing_preference=less_walking&mode=transit&departure_time=now&alternatives=true"
-    response = requests.get(string)
-    response = response.json()
+    string = "https://maps.googleapis.com/maps/api/directions/json"
+    params = {
+        'origin': f'{origin[0]},{origin[1]}',
+        'destination': f'{destin[0]},{destin[1]}',
+        'key': app.config["GOOGLE_API_KEY"] ,
+        'avoid': 'indoor',
+        'units': 'km',
+        'transit_mode': 'bus',
+        'transit_routing_preference': 'less_walking',
+        'mode': 'transit',
+        'departure_time': 'now',
+        'alternatives': 'true'
+    }
+    response = requests.get(string,params=params).json()
     instructions = []
     count = 0
     dictl = dict()
