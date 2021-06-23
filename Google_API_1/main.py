@@ -1,5 +1,5 @@
 import math
-
+import os
 import flask
 from flask import request, jsonify
 from math import cos, asin, sqrt, radians, sin
@@ -11,6 +11,11 @@ import itertools
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
+# Retrieve GOOGLE_API_KEY from environment variable
+# Compatible with most secrets management
+app.config["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
+if not app.config["GOOGLE_API_KEY"]:
+    raise ValueError("No GOOGLE_API_KEY set for Flask application")
 
 @app.route('/api/distance', methods=['GET'])
 def getDistance():
@@ -43,7 +48,7 @@ def getRoute():
 
     string = "https://maps.googleapis.com/maps/api/directions/json?origin=" + str(origin[0]) + "," + str(
         origin[1]) + "&destination=" + str(destin[0]) + "," + str(destin[
-                                                                      1]) + "&key=&avoid=indoor&units=km&transit_mode=bus&transit_routing_preference=less_walking&mode=transit&departure_time=now&alternatives=true"
+                                                                      1]) + "&key=" + app.config['GOOGLE_API_KEY'] + "&avoid=indoor&units=km&transit_mode=bus&transit_routing_preference=less_walking&mode=transit&departure_time=now&alternatives=true"
     response = requests.get(string)
     response = response.json()
     instructions = []
@@ -235,7 +240,7 @@ def getBusCode():
 
 def googleName(normalName):
     normalName = normalName.replace(" ", "%20")
-    string = "https://maps.googleapis.com/maps/api/geocode/json?key=&address=" + normalName
+    string = "https://maps.googleapis.com/maps/api/geocode/json?key=" + app.config['GOOGLE_API_KEY'] + "&address=" + normalName
     response = requests.get(string)
     response = response.json()
     name = response["results"][0]["address_components"][0]["long_name"]
