@@ -1,17 +1,12 @@
-import math
 import os
 import pickle
-
 import flask
-from flask import request, jsonify
-from math import cos, asin, sqrt, radians, sin
+from flask import request
 import requests
 import pandas as pd
-from sklearn.neighbors import KDTree
 import numpy as np
-import itertools
 import simplejson
-from fasthaversine import haversine
+from haversine import haversine
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
@@ -36,7 +31,7 @@ def getDistance():
     else:
         return "Error: Parameters not properly provided. Please specify properly."
 
-    return str(haversine([origin], [destin], unit='km'))
+    return str(haversine(origin, destin))
 
 
 @app.route('/api/routing', methods=['GET'])

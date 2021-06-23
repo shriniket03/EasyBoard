@@ -5,7 +5,7 @@ simplejson == 3.17.2
 numpy == 1.21.0
 pandas == 1.2.5
 sklearn == 0.0
-fasthaversine == 0.1.2
+haversine == 2.3.1
 
 
 
