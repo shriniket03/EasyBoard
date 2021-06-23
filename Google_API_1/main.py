@@ -77,8 +77,8 @@ def getRoute():
                 legSpecific = ("WALK", origin, destination, distance, duration)
                 instructions.append(legSpecific)
             elif leg['travel_mode'] == "TRANSIT":
-                departure = leg['transit_details']['departure_stop']['name']
-                arrival = leg['transit_details']['arrival_stop']['name']
+                departure = str(leg['transit_details']['departure_stop']['location']['lat']) + "," + str(leg['transit_details']['departure_stop']['location']['lng'])
+                arrival = str(leg['transit_details']['arrival_stop']['location']['lat']) + "," + str(leg['transit_details']['arrival_stop']['location']['lng'])
                 busNumber = leg['transit_details']['line']['name']
                 numStops = leg['transit_details']['num_stops']
                 duration = leg['distance']['text']
@@ -96,7 +96,7 @@ def busStops():
     destinBusStop = str(request.args['destinBusStop']).split(",")
     busNumber = str(request.args['busNumber'])
     numberOfStops = int(request.args['numStops'])
-    filtered_routes = routes_df[routes_df['ServiceNo']==str(busNumber)]
+    filtered_routes = routes_df[routes_df['ServiceNo']==str(busNumber)] #291T support
     idx2 = np.where(filtered_routes['BusStopCode'] == get_nearest_bus_stop(*destinBusStop)['BusStopCode'])[0]
     idx1 = np.where(filtered_routes['BusStopCode'] == get_nearest_bus_stop(*currentBusStop)['BusStopCode'])[0]
     if len(idx1) > 1 or len(idx2) > 1:
@@ -130,3 +130,4 @@ def getBusCode():
     busStopCode = pd.merge(filtered_stops, filtered_routes, on='BusStopCode')['BusStopCode'].tolist()[0]
     return busStopCode
 
+app.run()
