@@ -1,21 +1,33 @@
 import math
 import os
+import pickle
+
 import flask
 from flask import request, jsonify
 from math import cos, asin, sqrt, radians, sin
 import requests
-import simplejson
+import pandas as pd
 from bs4 import BeautifulSoup
+from sklearn.neighbors import KDTree
+import numpy as np
 import itertools
+import simplejson
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
-
+stops_df = pd.read_pickle('stops')
+routes_df = pd.read_pickle('routes')
+tree=pickle.load(open('pickle','rb'))
+app.config['GOOGLE_API_KEY'] = 'AIzaSyBv2C67gbDICww4maZLs0vxqkO6XdJ_PlE'
 # Retrieve GOOGLE_API_KEY from environment variable
 # Compatible with most secrets management
-app.config["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
-if not app.config["GOOGLE_API_KEY"]:
-    raise ValueError("No GOOGLE_API_KEY set for Flask application")
+#app.config["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
+#if not app.config["GOOGLE_API_KEY"]:
+    #raise ValueError("No GOOGLE_API_KEY set for Flask application")
+
+def get_nearest_bus_stop(lat, lon):
+    _, nearest_ind = tree.query([[lat,lon]], k=1)
+    return stops_df.iloc[nearest_ind[0][0]]
 
 @app.route('/api/distance', methods=['GET'])
 def getDistance():
@@ -84,117 +96,20 @@ def getRoute():
 
 @app.route('/api/busStop', methods=['GET'])
 def busStops():
-    if 'currentBusStop' and 'busNumber' and 'destinBusStop' and 'numStops' in request.args:
-        currentBusStop = str(request.args['currentBusStop'])
-        destinBusStop = str(request.args['destinBusStop'])
-        busNumber = str(request.args['busNumber'])
-        numStops = str(request.args['numStops'])
-    else:
-        return "Error: Proper parameters not provided"
-
-    data = requests.get('https://www.transitlink.com.sg/eservice/eguide/service_route.php?service=' + busNumber)
-    soup = BeautifulSoup(data.content, 'html.parser')
-    element = list(soup.find_all('td', class_='route', width=True))
-    busStop = []
-    for i in range(1, len(element)):
-        temp = element[i].getText()
-        temp = temp.lstrip('\xa0•\xa0')
-        if temp != "Express":
-            busStop.append(temp)
-    try:
-        split = busStop.index('Road / Bus Stop Description')
-        dir1, dir2 = busStop[:split], busStop[split:]
-        dir2.remove(dir2[0])
-    except:
-        dir1 = busStop
-        dir2 = []
-    usage = 0
-    indices1 = [index for index, element in enumerate(dir1) if element == currentBusStop
-                or element + " Int" == currentBusStop
-                or element.split(" - ")[0].strip() == currentBusStop
-                or element.replace("W'lands", "Woodlands") == currentBusStop]
-    indices2 = [index for index, element in enumerate(dir1) if element == destinBusStop
-                or element + " Int" == destinBusStop
-                or element.split(" - ")[0].strip() == destinBusStop
-                or element.replace("W'lands", "Woodlands") == destinBusStop]
-    if len(indices1) == 0 and len(indices2) == 0:
-        indices1 = [index for index, element in enumerate(dir2) if element == currentBusStop
-                    or element + " Int" == currentBusStop
-                    or element.split(" - ")[0].strip() == currentBusStop
-                    or element.replace("W'lands", "Woodlands") == currentBusStop]
-        indices2 = [index for index, element in enumerate(dir2) if element == destinBusStop
-                    or element + " Int" == destinBusStop
-                    or element.split(" - ")[0].strip() == destinBusStop
-                    or element.replace("W'lands", "Woodlands") == destinBusStop]
-        usage = 1
-    if len(indices1) == 0 and len(indices2) == 0:
-        counter = 0
-        for stuffedprata in dir1:
-            stuffedprata.replace(" ", "+")
-            a = requests.get("https://www.google.com/search?q=" + stuffedprata + "+bus+stop")
-            soup = BeautifulSoup(a.content, 'html.parser')
-            element = list(soup.find_all('span'))
-            if element[15].getText() == currentBusStop:
-                indices1.append(counter)
-                usage=0
-                break
-            counter += 1
-    if len(indices1) == 0 and len(indices2) == 0:
-        counter = 0
-        for stuffedprata in dir2:
-            stuffedprata.replace(" ", "+")
-            a = requests.get("https://www.google.com/search?q=" + stuffedprata + "+bus+stop")
-            soup = BeautifulSoup(a.content, 'html.parser')
-            element = list(soup.find_all('span'))
-            if element[15].getText() == currentBusStop:
-                indices1.append(counter)
-                usage=1
-                break
-            counter += 1
-    if len(indices2) == 1 and len(indices1) == 0:
-        indices1.append((indices2[0] - int(numStops)))
-    if len(indices1) == 1 and len(indices2) == 0:
-        indices2.append((indices1[0] + int(numStops)))
-    if len(indices2) != 0 and len(indices1) == 0:
-        for integer in indices2:
-            indices1.append(integer - int(numStops))
-        for thing in list(indices1):
-            if usage == 0:
-                if googleName(dir1[thing]) == currentBusStop:
-                    indices1 = list().append(thing)
-                    break
-            if usage == 1:
-                if googleName(dir2[thing]) == currentBusStop:
-                    indices1 = list().append(thing)
-                    break
-    if len(indices1) != 0 and len(indices2) == 0:
-        for integer in indices1:
-            indices2.append(integer + int(numStops))
-        for thing in list(indices2):
-            if usage == 0:
-                if googleName(dir1[thing]) == destinBusStop:
-                    indices2 = list().append(thing)
-                    break
-            if usage == 1:
-                if googleName(dir2[thing]) == destinBusStop:
-                    indices2 = list().append(thing)
-                    break
-    possible = list(itertools.product(indices1, indices2))
-    final = ()
-    for element in possible:
-        if (element[1] - element[0]) != int(numStops):
-            continue
-        final = element
-    finalList = []
-    if usage == 0:
-        for stop in range(final[0], final[1] + 1):
-            finalList.append(dir1[stop])
-    if usage == 1:
-        for stop in range(final[0], final[1] + 1):
-            finalList.append(dir2[stop])
-
-    output = {'instructions': finalList}
-
+    currentBusStop = str(request.args['currentBusStop']).split(",")
+    destinBusStop = str(request.args['destinBusStop']).split(",")
+    busNumber = str(request.args['busNumber'])
+    numberOfStops = int(request.args['numStops'])
+    filtered_routes = routes_df[routes_df['ServiceNo'] == str(busNumber)]
+    start_bus_stop = get_nearest_bus_stop(*currentBusStop)
+    idx1 = np.where(filtered_routes['BusStopCode'] == start_bus_stop['BusStopCode'])[0][0]
+    end_bus_stop = get_nearest_bus_stop(*destinBusStop)
+    idx2 = np.where(filtered_routes['BusStopCode'] == end_bus_stop['BusStopCode'])[0][0]
+    lister = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2 + 1], on='BusStopCode').sort_values(by=['StopSequence'])['Description'].tolist()
+    if len(lister)>numberOfStops:
+        if lister.count(lister[0])>1:
+            lister = lister[-numberOfStops-1:]
+    output = {'instructions': lister}
     return simplejson.dumps(output)
 
 
@@ -237,11 +152,4 @@ def getBusCode():
             continue
     return temp
 
-
-def googleName(normalName):
-    normalName = normalName.replace(" ", "%20")
-    string = "https://maps.googleapis.com/maps/api/geocode/json?key=" + app.config['GOOGLE_API_KEY'] + "&address=" + normalName
-    response = requests.get(string)
-    response = response.json()
-    name = response["results"][0]["address_components"][0]["long_name"]
-    return name
+app.run()
