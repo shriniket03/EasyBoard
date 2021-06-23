@@ -7,7 +7,6 @@ from flask import request, jsonify
 from math import cos, asin, sqrt, radians, sin
 import requests
 import pandas as pd
-from bs4 import BeautifulSoup
 from sklearn.neighbors import KDTree
 import numpy as np
 import itertools
