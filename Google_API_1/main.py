@@ -96,16 +96,26 @@ def busStops():
     destinBusStop = str(request.args['destinBusStop']).split(",")
     busNumber = str(request.args['busNumber'])
     numberOfStops = int(request.args['numStops'])
-    filtered_routes = routes_df[routes_df['ServiceNo'] == str(busNumber)]
-    start_bus_stop = get_nearest_bus_stop(*currentBusStop)
-    idx1 = np.where(filtered_routes['BusStopCode'] == start_bus_stop['BusStopCode'])[0][0]
-    end_bus_stop = get_nearest_bus_stop(*destinBusStop)
-    idx2 = np.where(filtered_routes['BusStopCode'] == end_bus_stop['BusStopCode'])[0][0]
-    lister = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2 + 1], on='BusStopCode').sort_values(by=['StopSequence'])['BusStopCode'].tolist()
-    lister2 = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2 + 1], on='BusStopCode').sort_values(by=['StopSequence'])[
-        'Description'].tolist()
-    output = {'busStopCodes': lister,'busStopNames':lister2}
-    return simplejson.dumps(output)
+    filtered_routes = routes_df[routes_df['ServiceNo']==str(busNumber)]
+    idx2 = np.where(filtered_routes['BusStopCode'] == get_nearest_bus_stop(*destinBusStop)['BusStopCode'])[0]
+    idx1 = np.where(filtered_routes['BusStopCode'] == get_nearest_bus_stop(*currentBusStop)['BusStopCode'])[0]
+    if len(idx1) > 1 or len(idx2) > 1:
+        for st in idx1:
+            for en in idx2:
+                if st + numberOfStops == en:
+                    break
+            else:
+                continue
+            break
+        idx1 = st
+        idx2 = en
+    else:
+        idx1 = idx1[0]
+        idx2 = idx2[0]
+    merged_df = pd.merge(stops_df, filtered_routes.iloc[idx1:idx2+1], on='BusStopCode')
+    lister = merged_df.sort_values('StopSequence')['Description'].to_list()
+    lister2 = merged_df.sort_values('StopSequence')['BusStopCode'].to_list()
+    return simplejson.dumps({'busNames': lister,'busCodes':lister2})
 
 
 @app.route('/api/busCode', methods=['GET'])
