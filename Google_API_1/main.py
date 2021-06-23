@@ -115,41 +115,14 @@ def busStops():
 
 @app.route('/api/busCode', methods=['GET'])
 def getBusCode():
-    if 'originBusStop' and 'busNumber' in request.args:
+    if 'originBusStop' in request.args and 'busNumber' in request.args:
         originBusStop = str(request.args['originBusStop'])
         busNumber = str(request.args['busNumber'])
     else:
         return "Error: Proper parameters not provided"
-    try:
-        data = requests.get('https://www.transitlink.com.sg/eservice/eguide/service_route.php?service=' + busNumber)
-        soup = BeautifulSoup(data.content, 'html.parser')
-        element = list(soup.find_all('td'))
-        stuff = []
-        for item in element:
-            if item.getText() == '\xa0':
-                continue
-            stuff.append(item.getText())
-        inde = stuff.index('0.0')
-    except IndexError:
-        busNumber = busNumber[:-1]
-        data = requests.get('https://www.transitlink.com.sg/eservice/eguide/service_route.php?service=' + busNumber)
-        soup = BeautifulSoup(data.content, 'html.parser')
-        element = list(soup.find_all('td'))
-        stuff = []
-        for item in element:
-            if item.getText() == '\xa0':
-                continue
-            stuff.append(item.getText())
-        inde = stuff.index('0.0')
-    stuff = stuff[inde:-2]
-    temp = []
-    for thing in stuff:
-        if originBusStop == thing[3:]:
-            temp = stuff[stuff.index(thing) - 1]
-            temp = temp.strip()
-            break
-        else:
-            continue
-    return temp
+    filtered_routes = routes_df[routes_df['ServiceNo'] == str(busNumber)]
+    filtered_stops = stops_df[stops_df['Description'] == originBusStop]
+    busStopCode = pd.merge(filtered_stops, filtered_routes, on='BusStopCode')['BusStopCode'].tolist()[0]
+    return busStopCode
 
 app.run()
