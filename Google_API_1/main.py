@@ -1,14 +1,13 @@
 import os
 import pickle
-import flask
-from flask import request
+from quart import Quart,request
 import requests
 import pandas as pd
 import numpy as np
 import simplejson
 from haversine import haversine
 
-app = flask.Flask(__name__)
+app = Quart(__name__)
 app.config["DEBUG"] = True
 stops_df = pd.read_pickle('stops')
 routes_df = pd.read_pickle('routes')
@@ -17,7 +16,7 @@ tree=pickle.load(open('pickle','rb'))
 # Compatible with most secrets management
 app.config["GOOGLE_API_KEY"] = os.environ.get("GOOGLE_API_KEY")
 if not app.config["GOOGLE_API_KEY"]:
-    raise ValueError("No GOOGLE_API_KEY set for Flask application")
+    raise ValueError("No GOOGLE_API_KEY set for Quart application")
 
 def get_nearest_bus_stop(lat, lon):
     _, nearest_ind = tree.query([[lat,lon]], k=1)

@@ -1,4 +1,4 @@
-flask == 2.0.1
+quart == 0.15.1
 gunicorn == 20.1.0
 requests == 2.25.1
 simplejson == 3.17.2
@@ -6,6 +6,7 @@ numpy == 1.21.0
 pandas == 1.2.5
 sklearn == 0.0
 haversine == 2.3.1
+uvicorn == 0.14.0
 
 
 
