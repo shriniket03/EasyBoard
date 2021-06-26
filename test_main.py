@@ -1,11 +1,5 @@
-#from main import getDistance, get_nearest_bus_stop
-#from main import busStops, getBusCode
-import os
-import sys
-
 from main import app
 from config import DevConfig, ProdConfig
-#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '...')))
 
 import pytest
 import json

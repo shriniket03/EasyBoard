@@ -1,4 +1,3 @@
-import os
 import pickle
 from quart import Quart,request
 import requests
@@ -7,18 +6,44 @@ import numpy as np
 import simplejson
 from haversine import haversine
 
+from config import ProdConfig
+
 stops_df = pd.read_pickle('resources/stops')
 routes_df = pd.read_pickle('resources/routes')
 tree=pickle.load(open('resources/pickle','rb'))
 
 app = Quart(__name__)
 
-def get_nearest_bus_stop(lat, lon):
+def get_nearest_bus_stop(lat : float, lon : float) -> pd.DataFrame: 
+    """
+    Returns the nearest bust stop for a given lat long.
+    Uses a kdtree to look for closest 1 neighbour with euclidean distance metric
+
+    Args:
+        lat (float): Latitude of the bus stop query
+        lon (float): Longitude of the bus stop query
+
+    Returns:
+        Pandas.dataframe : Dataframe of the nearest bus stop 
+    """
     _, nearest_ind = tree.query([[lat,lon]], k=1)
     return stops_df.iloc[nearest_ind[0][0]]
 
 @app.route('/api/distance', methods=['GET'])
 def getDistance():
+    """
+    API endpoint for haversine distance between two GPS locations.
+    All GPS co-ordinates are in WGS84
+
+    Args:
+        destinLong (float): GPS Longitude of destination
+        destinLat (float): GPS Longitude of destination
+        originLong (float): GPS Longitude of origin
+        originLat (float): GPS Latitude of origin
+
+    Returns:
+        str: The haversine distance between the two provided points
+    """
     if all(x in request.args for x in ['destinLong', 'destinLat','originLong','originLat']):
         origin = (float(request.args['originLat']), float(request.args['originLong']))
         destin = (float(request.args['destinLat']), float(request.args['destinLong']))
@@ -30,6 +55,20 @@ def getDistance():
 
 @app.route('/api/routing', methods=['GET'])
 def getRoute():
+    """
+    API endpoint for routing between two co-ordinates.
+    Routing is handled by the google maps api.
+    All GPS co-ordinates are in WGS84.
+
+    Args:
+        destinLong (float): GPS Longitude of destination
+        destinLat (float): GPS Longitude of destination
+        originLong (float): GPS Longitude of origin
+        originLat (float): GPS Latitude of origin
+
+    Returns:
+        dict: A dictionary of possible routes and the steps.
+    """
     try:
         if all(x in request.args for x in ['destinLong', 'destinLat','originLong','originLat']):
             origin = (float(request.args['originLat']), float(request.args['originLong']))
@@ -86,6 +125,18 @@ def getRoute():
 
 @app.route('/api/busStop', methods=['GET'])
 def busStops():
+    """
+    API endpoint to get the bus stops between two provided bus stops.
+
+    Args:
+        currentBusStop (tuple): A tuple of the current GPS co-ordinate. (lat, long)
+        destinBusStop (tuple): A tuple of the destination GPS co-ordinate. (lat, long)
+        busNumber (Integer): The bus number of the current bus. Eg 972
+        numStops (Integer): Number of stops between the stops. 
+
+    Returns:
+        dict: A dictionary of the bus stops' names and LTA codes.
+    """
     currentBusStop = str(request.args['currentBusStop']).split(",")
     destinBusStop = str(request.args['destinBusStop']).split(",")
     busNumber = str(request.args['busNumber'])
@@ -114,6 +165,16 @@ def busStops():
 
 @app.route('/api/busCode', methods=['GET'])
 def getBusCode():
+    """
+    API endpoint to get the LTA bus stop code from description and bus number.
+
+    Args:
+        originBusStop (tuple): Human readable name of the bus stop Eg : Opp IMM Bldg
+        busNumber (Integer): The bus number of the current bus. Eg 972
+
+    Returns:
+        str: The bus stop code
+    """
     if 'originBusStop' in request.args and 'busNumber' in request.args:
         originBusStop = str(request.args['originBusStop'])
         busNumber = str(request.args['busNumber'])
@@ -125,5 +186,5 @@ def getBusCode():
     return busStopCode
 
 if __name__ == '__main__':
-    app.config.from_object('config.ProdConfig')
+    app.config.from_object(ProdConfig)
     app.run()
