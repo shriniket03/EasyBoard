@@ -3,7 +3,7 @@
 import os
 import sys
 
-from Google_API_1.main import app
+from easyboard.main import app
 from config import DevConfig
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '...')))
 
