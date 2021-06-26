@@ -21,9 +21,13 @@ async def test_haversine(client):
             'originLat': 1.3302930303817977
     })
     body = await rv.get_data()
+    ps_time = time.time() - start
+    print(f'Distance API took {ps_time}')
+    print(f'Distance API has status code {rv.status_code}')
+    print(f'Distance API returned {float(body)}')
     assert rv.status_code == 200
-    assert time.time() - start <= 0.1
-    assert float(body) - 39.576757658125956 < 1e-3
+    assert ps_time <= 0.002
+    assert -1e-9 < float(body) - 39.576757658125956 < 1e-9
 
 @pytest.mark.asyncio
 async def test_bus_stops_normal(client):
@@ -36,9 +40,14 @@ async def test_bus_stops_normal(client):
             'numStops' : '14'
     })
     data = json.loads(await rv.get_data())
+    ps_time = time.time() - start
+    print(f'API took {ps_time}')
+    print(f'API has status code {rv.status_code}')
+    print(f'API returned bus Names :{data["busNames"]}')
+    print(f'API returned bus codes {data["busCodes"]}')
     assert rv.status_code == 200
-    assert time.time() - start <= 0.1
-    assert data['busNames']== ['IMM Bldg','Blk 286A','Blk 288E','Blk 241','Blk 190','Blk 185','Blk 146','Opp Blk 127','Bef Bt Batok West Ave 5','Opp Blk 305','Opp Blk 315','Blk 419','Opp Blk 336','HomeTeamNS','Bt Batok Driving Ctr']
+    assert ps_time <= 0.007
+    assert data['busNames'] == ['IMM Bldg','Blk 286A','Blk 288E','Blk 241','Blk 190','Blk 185','Blk 146','Opp Blk 127','Bef Bt Batok West Ave 5','Opp Blk 305','Opp Blk 315','Blk 419','Opp Blk 336','HomeTeamNS','Bt Batok Driving Ctr']
     assert data['busCodes'] == ['28659', '28649', '28639', '28621', '43691', '43379', '43329', '43409', '43469', '43479', '43489', '43499', '43839', '43649', '43521']
 
 @pytest.mark.asyncio
@@ -52,8 +61,13 @@ async def test_bus_stops_loop(client):
             'numStops' : '5'
     })
     data = json.loads(await rv.get_data())
+    ps_time = time.time() - start
+    print(f'API took {ps_time}')
+    print(f'API has status code {rv.status_code}')
+    print(f'API returned bus Names :{data["busNames"]}')
+    print(f'API returned bus codes {data["busCodes"]}')
     assert rv.status_code == 200
-    assert time.time() - start <= 0.1
+    assert ps_time <= 0.007
     assert data['busNames'] == ['Dunman Sec Sch', 'Blk 484', 'Blk 430', 'Blk 418', 'BLK 503', 'Tampines Int']
     assert data['busCodes'] == ['76271', '76351', '76361', '76391', '76199', '75009']
 
@@ -68,8 +82,13 @@ async def test_bus_stops_feeder(client):
             'numStops' : '8'
     })
     data = json.loads(await rv.get_data())
+    ps_time = time.time() - start
+    print(f'API took {ps_time}')
+    print(f'API has status code {rv.status_code}')
+    print(f'API returned bus Names :{data["busNames"]}')
+    print(f'API returned bus codes {data["busCodes"]}')
     assert rv.status_code == 200
-    assert time.time() - start <= 0.1
+    assert ps_time <= 0.007
     assert data['busNames'] == ['Tampines Int', 'BLK 401', 'Blk 417', 'Blk 496F', 'Blk 493B', 'Blk 491C', 'Opp Blk 489A', 'Opp Blk 487B', 'Blk 390']
     assert data['busCodes'] == ['75009', '76191', '76399', '76369', '76359', '76279', '76269', '76259', '76239']
 
@@ -82,8 +101,12 @@ async def test_bus_code(client):
             'busNumber' : '188'
     })
     data = json.loads(await rv.get_data())
+    ps_time = time.time() - start
+    print(f'API took {ps_time}')
+    print(f'API has status code {rv.status_code}')
+    print(f'API returned : {data}')
     assert rv.status_code == 200
-    assert time.time() - start <= 0.1
+    assert ps_time <= 0.005
     assert data == 28651
 
 def test_api_key():
