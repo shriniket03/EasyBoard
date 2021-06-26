@@ -27,6 +27,7 @@ async def test_haversine(client):
 
 @pytest.mark.asyncio
 async def test_bus_stops_normal(client):
+    """ Test bus stops API with a normal bus """
     start = time.time()
     rv = await client.get('/api/busStop', query_string={
             'currentBusStop' : '1.3347077916151044, 103.74772153964176', #IMM
@@ -42,6 +43,7 @@ async def test_bus_stops_normal(client):
 
 @pytest.mark.asyncio
 async def test_bus_stops_loop(client):
+    """ Test bus stops API with a loop bus """
     start = time.time()
     rv = await client.get('/api/busStop', query_string={
             'currentBusStop' : '1.361811,103.9551834',
@@ -57,6 +59,7 @@ async def test_bus_stops_loop(client):
 
 @pytest.mark.asyncio
 async def test_bus_stops_feeder(client):
+    """ Test bus stops API with a feeder bus """
     start = time.time()
     rv = await client.get('/api/busStop', query_string={
             'currentBusStop' : '1.35407,103.9433',
@@ -72,6 +75,7 @@ async def test_bus_stops_feeder(client):
 
 @pytest.mark.asyncio
 async def test_bus_code(client):
+    """ Test bus code API """
     start = time.time()
     rv = await client.get('/api/busCode', query_string={
             'originBusStop' : 'Opp IMM Bldg',
