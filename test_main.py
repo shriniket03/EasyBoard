@@ -3,7 +3,7 @@
 import os
 import sys
 
-from easyboard.main import app
+from main import app
 from config import DevConfig, ProdConfig
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '...')))
 
