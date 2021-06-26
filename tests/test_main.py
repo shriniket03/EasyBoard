@@ -4,7 +4,7 @@ import os
 import sys
 
 from easyboard.main import app
-from config import DevConfig
+from config import DevConfig, ProdConfig
 #sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '...')))
 
 import pytest
@@ -89,5 +89,9 @@ async def test_bus_code(client):
     assert data == 28651
 
 def test_api_key():
-    app.config.from_object('config.DevConfig')
+    app.config.from_object(DevConfig)
     assert app.config.get('GOOGLE_API_KEY') == 'xxx'
+
+def test_prod_api_key():
+    app.config.from_object(ProdConfig)
+    assert app.config.get('GOOGLE_API_KEY')
